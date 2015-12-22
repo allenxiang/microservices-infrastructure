@@ -13,5 +13,4 @@ if [ ! -f /vagrant/security.yml ]; then
   ./security-setup --enable=false
 fi
 
-hostname default
-ansible-playbook vagrant.yml -e @security.yml -e "vagrant_private_ipv4=$1" -i /vagrant/vagrant/vagrant-inventory
+hostname $1

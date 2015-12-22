@@ -1,19 +1,46 @@
 ---
-- hosts: all
-  vars:
-    consul_servers_group: role=control
-    consul_dns_domain: consul
-    consul_dc: vagrant
-    consul_acl_datacenter: vagrant
-    consul_bootstrap_expect: 1
-    mesos_cluster: vagrant
-    mesos_mode: mixed
-    provider: vagrant
+- hosts: node1
+  gather_facts: no
   pre_tasks:
     - name: set vagrant ip addresses in inventory
       set_fact:
-        private_ipv4: "{{ vagrant_private_ipv4 }}"
-        public_ipv4: "{{ vagrant_private_ipv4 }}"
+        private_ipv4: "192.168.242.51"
+        public_ipv4: "192.168.242.51"
+
+- hosts: node2
+  gather_facts: no
+  pre_tasks:
+    - name: set vagrant ip addresses in inventory
+      set_fact:
+        private_ipv4: "192.168.242.52"
+        public_ipv4: "192.168.242.52"
+
+- hosts: node3
+  gather_facts: no
+  pre_tasks:
+    - name: set vagrant ip addresses in inventory
+      set_fact:
+        private_ipv4: "192.168.242.52"
+        public_ipv4: "192.168.242.52"
+
+- hosts: node4
+  gather_facts: no
+  pre_tasks:
+    - name: set vagrant ip addresses in inventory
+      set_fact:
+        private_ipv4: "192.168.242.53"
+        public_ipv4: "192.168.242.53"
+
+- hosts: all
+  vars_files: 
+    - security.yml
+  vars:
+    consul_dns_domain: consul
+    consul_servers_group: role=control
+    consul_dc: vagrant
+    consul_acl_datacenter: vagrant
+    consul_bootstrap_expect: 1
+    provider: vagrant
   roles:
     - common
     - collectd
@@ -23,10 +50,35 @@
     - dnsmasq
     - nginx
     - consul
-    - logstash
+#    - logstash
+    - traefik
+
+- hosts: role=worker
+  gather_facts: no
+  vars:
+    consul_dns_domain: consul
+    mesos_mode: follower
+  roles:
+    - mesos
+
+- hosts: role=control
+  gather_facts: no
+  vars:
+    consul_servers_group: role=control
+    mesos_leaders_group: role=control
+    mesos_mode: leader
+    zookeeper_server_group: role=control
+  roles:
     - vault
     - zookeeper
     - mesos
     - marathon
     - chronos
     - mantlui
+
+- hosts: role=edge
+  gather_facts: no
+  vars:
+    traefik_marathon_domain: marathon.localhost
+  roles:
+    - traefik

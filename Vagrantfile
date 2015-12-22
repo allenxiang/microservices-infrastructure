@@ -12,10 +12,7 @@ def load_security
   YAML.load_file(fname)
 end
 
-VAGRANT_PRIVATE_IP = "192.168.242.55"
-
 Vagrant.configure(2) do |config|
-
   # Prefer VirtualBox before VMware Fusion
   config.vm.provider "virtualbox"
   config.vm.provider "vmware_fusion"
@@ -23,15 +20,32 @@ Vagrant.configure(2) do |config|
   config.vm.box = "CiscoCloud/microservices-infrastructure"
 
   config.vm.synced_folder ".", "/vagrant", type: "rsync"
-  config.vm.network "private_network", :ip => VAGRANT_PRIVATE_IP
-
-  config.vm.provision "shell" do |s|
-    s.path = "vagrant/provision.sh"
-    s.args = VAGRANT_PRIVATE_IP
-  end
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ['modifyvm', :id, '--cpus', 1]
-    vb.customize ['modifyvm', :id, '--memory', 1536]
+    vb.customize ['modifyvm', :id, '--memory', 2096]
   end
+
+  N = 4
+
+  (1..N).each do |node_id|
+    config.vm.define "node#{node_id}" do |node|
+      node.vm.hostname = "node#{node_id}"
+      node.vm.network "private_network", ip: "192.168.242.#{50+node_id}"
+      node.vm.provision "shell" do |s|
+        s.path = "vagrant/provision.sh"
+        s.args = "node#{node_id}"
+      end
+
+      if node_id == N
+        node.vm.provision :ansible do |ansible|
+          ansible.playbook = "vagrant.yml"
+          ansible.limit = 'all'
+          ansible.inventory_path = "vagrant/vagrant-inventory"
+        end
+      end
+    end
+  end
+
 end
+

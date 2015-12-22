@@ -1,10 +1,21 @@
-default ansible_connection=local
+node1 ansible_ssh_host=192.168.242.51 ansible_ssh_private_key_file=.vagrant/machines/node1/virtualbox/private_key ansible_ssh_user=vagrant
+node2 ansible_ssh_host=192.168.242.52 ansible_ssh_private_key_file=.vagrant/machines/node2/virtualbox/private_key ansible_ssh_user=vagrant
+node3 ansible_ssh_host=192.168.242.53 ansible_ssh_private_key_file=.vagrant/machines/node3/virtualbox/private_key ansible_ssh_user=vagrant
+node4 ansible_ssh_host=192.168.242.54 ansible_ssh_private_key_file=.vagrant/machines/node4/virtualbox/private_key ansible_ssh_user=vagrant
 
 [role=worker]
-default
+node2
+node3
+node4
 
 [role=control]
-default
+node1
+
+[role=edge]
+node1
 
 [dc=vagrant]
-default
+node1
+node2
+node3
+node4
